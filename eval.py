@@ -9,11 +9,9 @@ from sklearn import metrics
 
 os.environ["DGLBACKEND"] = "pytorch"
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string("score", "900", "Checkpoint to restore")
 flags.DEFINE_string("save_name", "outputs/gcngat/gcn-gat", "Saved name")
-
 
 BEST_SCORE = 0
 
@@ -30,10 +28,12 @@ def load_model(rel_list, device):
 
 def main(_):
   device = torch.device(f"cpu")
-  rel_list = [("author", "ref", "paper"),
-              ("paper", "cite", "paper"),
-              ("author", "coauthor", "author"),
-              ("paper", "beref", "author")]
+  rel_list = [
+      ("author", "ref", "paper"),
+      ("paper", "cite", "paper"),
+      ("author", "coauthor", "author"),
+      ("paper", "beref", "author"),
+  ]
   _, _, test_refs, refs_to_pred = build_graph(device)
   logging.info("Graph data loaded")
   model = load_model(rel_list, device)
@@ -48,27 +48,32 @@ def main(_):
   test_arr = np.array(test_refs.values)
   label_true = test_refs.label.to_numpy()
 
-  probs = prob_fn(node_embeddings["author"][test_arr[:, 0]],
-                  node_embeddings["paper"][test_arr[:, 1]])
+  probs = prob_fn(
+      node_embeddings["author"][test_arr[:, 0]],
+      node_embeddings["paper"][test_arr[:, 1]],
+  )
 
   preds = np.where(probs > 0.5, 1, 0)
   score = metrics.f1_score(label_true, preds)
   logging.info(f"Test F1-score: {score}")
 
   test_arr = np.array(refs_to_pred)
-  probs = prob_fn(node_embeddings["author"][test_arr[:, 0]],
-                  node_embeddings["paper"][test_arr[:, 1]])
+  probs = prob_fn(
+      node_embeddings["author"][test_arr[:, 0]],
+      node_embeddings["paper"][test_arr[:, 1]],
+  )
   preds = np.where(probs > 0.5, 1, 0)
 
   data = []
   for index, p in enumerate(list(preds)):
-      tp = [index, str(int(p))]
-      data.append(tp)
+    tp = [index, str(int(p))]
+    data.append(tp)
 
   df = pd.DataFrame(data, columns=["Index", "Predicted"], dtype=object)
   pth = f"{FLAGS.save_name}_sub_{int(score * 1000):3d}.csv"
   df.to_csv(pth, index=False)
   logging.info("Save to %s", pth)
+
 
 if __name__ == "__main__":
   app.run(main)

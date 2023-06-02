@@ -1,3 +1,4 @@
+from models import max_margin_loss
 from read_dataset import build_graph
 
 import dgl
@@ -10,7 +11,6 @@ from sklearn import metrics
 
 os.environ["DGLBACKEND"] = "pytorch"
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("n_epochs", 5, "Number of epochs")
 flags.DEFINE_float("lr", 0.001, "Learning rate")
@@ -18,7 +18,6 @@ flags.DEFINE_string("ckpt", "", "Checkpoint to restore")
 flags.DEFINE_string("gpu", "0", "Which GPU to use")
 flags.DEFINE_string("model", "gcnsage", "Model type (must defined in models)")
 flags.DEFINE_string("run_name", "debug", "Run name")
-
 
 BEST_SCORE = 0
 
@@ -29,7 +28,8 @@ def build_model(rel_list, device):
   return module.MyModel(rel_list).to(device)
 
 
-def eval_and_save_checkpoint(device, model, node_features, g, test_refs, out_dir):
+def eval_and_save_checkpoint(device, model, node_features, g, test_refs,
+                             out_dir):
   model.eval()
 
   node_features = {k: v.to(device) for k, v in node_features.items()}
@@ -41,12 +41,14 @@ def eval_and_save_checkpoint(device, model, node_features, g, test_refs, out_dir
   def prob_fn(feat_u, feat_v):
     with torch.no_grad():
       return model.pred.predict(feat_u, feat_v).cpu().numpy()
-    
+
   test_arr = np.array(test_refs.values)
   label_true = test_refs.label.to_numpy()
 
-  probs = prob_fn(node_embeddings["author"][test_arr[:, 0]],
-                  node_embeddings["paper"][test_arr[:, 1]])
+  probs = prob_fn(
+      node_embeddings["author"][test_arr[:, 0]],
+      node_embeddings["paper"][test_arr[:, 1]],
+  )
 
   preds = np.where(probs > 0.5, 1, 0)
   score = metrics.f1_score(label_true, preds)
@@ -69,10 +71,12 @@ def main(_):
   out_dir = os.path.join("outputs", FLAGS.run_name)
   os.makedirs(out_dir, exist_ok=True)
 
-  rel_list = [("author", "ref", "paper"),
-              ("paper", "cite", "paper"),
-              ("author", "coauthor", "author"),
-              ("paper", "beref", "author")]
+  rel_list = [
+      ("author", "ref", "paper"),
+      ("paper", "cite", "paper"),
+      ("author", "coauthor", "author"),
+      ("paper", "beref", "author"),
+  ]
   node_features, g, test_refs, _ = build_graph(device)
   logging.info("Graph data loaded")
   model = build_model(rel_list, device)
@@ -80,15 +84,16 @@ def main(_):
 
   sampler = dgl.dataloading.MultiLayerFullNeighborSampler(sum(model.n_layers))
   # sampler = dgl.dataloading.NeighborSampler([4, 4])
-  train_eid_dict = {etype: g.edges(etype=etype, form='eid')
-                    for etype in g.etypes}
-  sampler = dgl.dataloading.as_edge_prediction_sampler(sampler, negative_sampler=dgl.dataloading.negative_sampler.Uniform(5))
+  train_eid_dict = {
+      etype: g.edges(etype=etype, form="eid") for etype in g.etypes
+  }
+  sampler = dgl.dataloading.as_edge_prediction_sampler(
+      sampler, negative_sampler=dgl.dataloading.negative_sampler.Uniform(5))
   dataloader = dgl.dataloading.DataLoader(
       g,
       train_eid_dict,
       sampler,
       device=device,
-
       batch_size=32768,
       shuffle=True,
       drop_last=False,
@@ -96,10 +101,10 @@ def main(_):
   )
 
   opt = torch.optim.Adam(model.parameters(), FLAGS.lr)
-  scheduler = torch.optim.lr_scheduler.ChainedScheduler(
-    [torch.optim.lr_scheduler.ConstantLR(opt, 0.9, 10),
-     torch.optim.lr_scheduler.CosineAnnealingLR(opt, FLAGS.n_epochs)]
-  )
+  scheduler = torch.optim.lr_scheduler.ChainedScheduler([
+      torch.optim.lr_scheduler.ConstantLR(opt, 0.9, 10),
+      torch.optim.lr_scheduler.CosineAnnealingLR(opt, FLAGS.n_epochs),
+  ])
 
   if FLAGS.ckpt != "" and os.path.exists(FLAGS.ckpt):
     model.load_state_dict(torch.load(FLAGS.ckpt))
@@ -121,13 +126,14 @@ def main(_):
         opt.step()
 
         avg_loss += (loss.item() - avg_loss) / (step + 1)
-      
+
       logging.info(f"| Epoch {i_epoch:3d} "
                    f"| {time.time() - beg:3f} "
                    f"| loss: {avg_loss:.3f} |")
-      
+
       if avg_loss < 0.15 and eval_between > 2:
-        eval_and_save_checkpoint(device, model, node_features, g, test_refs, out_dir)
+        eval_and_save_checkpoint(device, model, node_features, g, test_refs,
+                                 out_dir)
         model.train()
         eval_between = 0
       scheduler.step()
@@ -135,7 +141,7 @@ def main(_):
 
   except KeyboardInterrupt:
     pass
-  
+
   eval_and_save_checkpoint(device, model, node_features, g, test_refs, out_dir)
 
 

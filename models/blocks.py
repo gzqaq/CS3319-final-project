@@ -9,8 +9,14 @@ class StochasticTwoLayerRGCN(nn.Module):
   def __init__(self, in_feat, hidden_feat, out_feat, rel_names):
     super().__init__()
 
-    self.conv1 = dglnn.HeteroGraphConv({rel: dglnn.GraphConv(in_feat, hidden_feat, norm="right") for rel in rel_names})
-    self.conv2 = dglnn.HeteroGraphConv({rel: dglnn.GraphConv(hidden_feat, out_feat, norm="right") for rel in rel_names})
+    self.conv1 = dglnn.HeteroGraphConv({
+        rel: dglnn.GraphConv(in_feat, hidden_feat, norm="right")
+        for rel in rel_names
+    })
+    self.conv2 = dglnn.HeteroGraphConv({
+        rel: dglnn.GraphConv(hidden_feat, out_feat, norm="right")
+        for rel in rel_names
+    })
 
   def forward(self, blocks, x):
     x = self.conv1(blocks[0], x)
@@ -28,10 +34,12 @@ class GCNBlock(nn.Module):
 
     self.convs = nn.ModuleList()
     for in_f, out_f in zip(in_feats, out_size):
-      self.convs.append(dglnn.HeteroGraphConv(
-        {rel: dglnn.GraphConv(in_f, out_f, norm="right", activation=F.elu) for rel in rel_names}
-      ))
-  
+      self.convs.append(
+          dglnn.HeteroGraphConv({
+              rel: dglnn.GraphConv(in_f, out_f, norm="right", activation=F.elu)
+              for rel in rel_names
+          }))
+
   def forward(self, blocks, x):
     for i, conv in enumerate(self.convs):
       x = conv(blocks[i], x)
@@ -48,10 +56,12 @@ class SAGEBlock(nn.Module):
 
     self.convs = nn.ModuleList()
     for in_f, out_f in zip(in_feats, out_size):
-      self.convs.append(dglnn.HeteroGraphConv(
-        {rel: dglnn.SAGEConv(in_f, out_f, "mean", activation=F.elu) for rel in rel_names}
-      ))
-  
+      self.convs.append(
+          dglnn.HeteroGraphConv({
+              rel: dglnn.SAGEConv(in_f, out_f, "mean", activation=F.elu)
+              for rel in rel_names
+          }))
+
   def forward(self, blocks, x):
     for i, conv in enumerate(self.convs):
       x = conv(blocks[i], x)
@@ -70,10 +80,14 @@ class GATBlock(nn.Module):
 
     self.convs = nn.ModuleList()
     for i, (in_f, out_f) in enumerate(zip(in_feats, out_size)):
-      self.convs.append(dglnn.HeteroGraphConv(
-        {rel: dglnn.GATConv(in_f * n_heads[i], out_f, n_heads[i + 1], activation=F.elu) for rel in rel_names}
-      ))
-  
+      self.convs.append(
+          dglnn.HeteroGraphConv({
+              rel: dglnn.GATConv(in_f * n_heads[i],
+                                 out_f,
+                                 n_heads[i + 1],
+                                 activation=F.elu) for rel in rel_names
+          }))
+
   def forward(self, blocks, x):
     for i, conv in enumerate(self.convs):
       x = conv(blocks[i], x)
@@ -86,7 +100,7 @@ class ScorePredictor(nn.Module):
   def forward(self, edge_subgraph, h):
     with edge_subgraph.local_scope():
       edge_subgraph.ndata["h"] = h
-      
+
       for etype in edge_subgraph.canonical_etypes:
         edge_subgraph.apply_edges(fn.u_dot_v("h", "h", "score"), etype=etype)
 
