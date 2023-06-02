@@ -9,8 +9,8 @@ class MyModel(nn.Module):
 
     out_feat = 32
     self.gcn = GCNBlock(512, [1024, 256], 128, rel_names)
-    self.save = SAGEBlock(128, [64, 32], out_feat, rel_names)
-    self.pred = MLPPredictor(out_feat * 4)
+    self.sage = SAGEBlock(128, [64, 32], out_feat, rel_names)
+    self.pred = MLPPredictor(out_feat)
 
   def gnn(self, g, x):
     x = self.gcn(g[:self.n_layers[0]], x)

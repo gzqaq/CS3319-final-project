@@ -27,12 +27,16 @@ def build_dataset(
     coauthor_edges: List[List[int]],
     split: float = 0.9,
     random_state: int = 0,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
   cite_edges, ref_edges, coauthor_edges = tuple(
       map(
           lambda x: pd.DataFrame(x, columns=["source", "target"]),
           [cite_edges, ref_edges, coauthor_edges],
       ))
+  cite_edges = cite_edges.set_index("c-" + cite_edges.index.astype(str))
+  ref_edges = ref_edges.set_index("r-" + ref_edges.index.astype(str))
+  coauthor_edges = coauthor_edges.set_index("a-" +
+                                            coauthor_edges.index.astype(str))
 
   tmp = pd.concat([
       cite_edges.loc[:, "source"],
@@ -74,7 +78,7 @@ def build_dataset(
   ])
   test_refs = test_refs.sample(frac=1, random_state=random_state, axis=0)
 
-  return train_refs, test_refs
+  return train_refs, test_refs, cite_edges, coauthor_edges
 
 
 def build_graph(device):

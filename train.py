@@ -28,8 +28,14 @@ def build_model(rel_list, device):
   return module.MyModel(rel_list).to(device)
 
 
-def eval_and_save_checkpoint(device, model, node_features, g, test_refs,
-                             out_dir):
+def eval_and_save_checkpoint(device,
+                             model,
+                             node_features,
+                             g,
+                             test_refs,
+                             out_dir,
+                             last: bool = False):
+  global BEST_SCORE
   model.eval()
 
   node_features = {k: v.to(device) for k, v in node_features.items()}
@@ -54,14 +60,17 @@ def eval_and_save_checkpoint(device, model, node_features, g, test_refs,
   score = metrics.f1_score(label_true, preds)
   logging.info("Test f1-score: %f", score)
 
-  if score > BEST_SCORE:
+  if score > BEST_SCORE or last:
     BEST_SCORE = score
     score_int = round(1000 * score)
 
     emb_pth = f"{out_dir}/{FLAGS.model}_emb_{score_int}.pt"
     state_dict_pth = f"{out_dir}/{FLAGS.model}_model_{score_int}.pt"
+
+    node_embeddings = {k: v.cpu() for k, v in node_embeddings.items()}
     torch.save(node_embeddings, emb_pth)
     logging.info("Save node embeddings to %s", emb_pth)
+
     torch.save(model.state_dict(), state_dict_pth)
     logging.info("Save model weights to %s", state_dict_pth)
 
@@ -128,7 +137,7 @@ def main(_):
         avg_loss += (loss.item() - avg_loss) / (step + 1)
 
       logging.info(f"| Epoch {i_epoch:3d} "
-                   f"| {time.time() - beg:3f} "
+                   f"| time: {time.time() - beg:<7.3f} "
                    f"| loss: {avg_loss:.3f} |")
 
       if avg_loss < 0.15 and eval_between > 2:
@@ -136,13 +145,20 @@ def main(_):
                                  out_dir)
         model.train()
         eval_between = 0
+
       scheduler.step()
       eval_between += 1
 
   except KeyboardInterrupt:
     pass
 
-  eval_and_save_checkpoint(device, model, node_features, g, test_refs, out_dir)
+  eval_and_save_checkpoint(device,
+                           model,
+                           node_features,
+                           g,
+                           test_refs,
+                           out_dir,
+                           last=True)
 
 
 if __name__ == "__main__":

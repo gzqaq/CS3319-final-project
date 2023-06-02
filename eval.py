@@ -10,8 +10,8 @@ from sklearn import metrics
 os.environ["DGLBACKEND"] = "pytorch"
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string("score", "900", "Checkpoint to restore")
-flags.DEFINE_string("save_name", "outputs/gcngat/gcn-gat", "Saved name")
+flags.DEFINE_integer("score", 667, "Checkpoint to restore")
+flags.DEFINE_string("save_name", "outputs/debug/gcnsage", "Saved name")
 
 BEST_SCORE = 0
 
@@ -27,7 +27,7 @@ def load_model(rel_list, device):
 
 
 def main(_):
-  device = torch.device(f"cpu")
+  device = torch.device("cpu")
   rel_list = [
       ("author", "ref", "paper"),
       ("paper", "cite", "paper"),
@@ -70,7 +70,7 @@ def main(_):
     data.append(tp)
 
   df = pd.DataFrame(data, columns=["Index", "Predicted"], dtype=object)
-  pth = f"{FLAGS.save_name}_sub_{int(score * 1000):3d}.csv"
+  pth = f"{FLAGS.save_name}_sub_{round(score * 1000)}.csv"
   df.to_csv(pth, index=False)
   logging.info("Save to %s", pth)
 
