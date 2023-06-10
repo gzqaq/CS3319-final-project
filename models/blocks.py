@@ -40,9 +40,17 @@ class GCNBlock(nn.Module):
               for rel in rel_names
           }))
 
+    self.bns = nn.ModuleDict({
+        rel: nn.ModuleList([nn.BatchNorm1d(feat) for feat in hidden_dims
+                           ]) for rel in ["author", "paper"]
+    })
+
   def forward(self, blocks, x):
     for i, conv in enumerate(self.convs):
       x = conv(blocks[i], x)
+
+      if i < len(self.convs) - 1:
+        x = {k: self.bns[k][i](v) for k, v in x.items()}
 
     return x
 
@@ -88,10 +96,18 @@ class GATBlock(nn.Module):
                                  activation=F.elu) for rel in rel_names
           }))
 
+    self.bns = nn.ModuleDict({
+        rel: nn.ModuleList([nn.BatchNorm1d(feat) for feat in hidden_dims
+                           ]) for rel in ["author", "paper"]
+    })
+
   def forward(self, blocks, x):
     for i, conv in enumerate(self.convs):
       x = conv(blocks[i], x)
       x = {k: v.flatten(1) for k, v in x.items()}
+
+      if i < len(self.convs) - 1:
+        x = {k: self.bns[k][i](v) for k, v in x.items()}
 
     return x
 
