@@ -91,8 +91,8 @@ def main(_):
   model = build_model(rel_list, device)
   logging.info("Model built")
 
-  sampler = dgl.dataloading.MultiLayerFullNeighborSampler(sum(model.n_layers))
-  # sampler = dgl.dataloading.NeighborSampler([4, 4])
+  # sampler = dgl.dataloading.MultiLayerFullNeighborSampler(sum(model.n_layers))
+  sampler = dgl.dataloading.NeighborSampler([4] * sum(model.n_layers))
   train_eid_dict = {
       etype: g.edges(etype=etype, form="eid") for etype in g.etypes
   }
@@ -128,7 +128,7 @@ def main(_):
       for step, (_, pos_g, neg_g, blocks) in enumerate(dataloader):
         input_features = blocks[0].srcdata["features"]
         pos_score, neg_score = model(pos_g, neg_g, blocks, input_features)
-        loss = max_margin_loss(pos_score, neg_score, rel_list[0])
+        loss = max_margin_loss(pos_score, neg_score, rel_list[0], delta=1.0)
 
         opt.zero_grad()
         loss.backward()

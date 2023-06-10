@@ -1,4 +1,4 @@
-from .blocks import GATBlock, MLPPredictor
+from .blocks import GCNBlock, MLPPredictor
 
 import torch.nn as nn
 
@@ -7,12 +7,14 @@ class MyModel(nn.Module):
   def __init__(self, rel_names):
     super().__init__()
 
-    out_feat = 32
-    self.gat = GATBlock(512, [256, 128, 64], out_feat, [4] * 4, rel_names)
-    self.pred = MLPPredictor(out_feat * 4)
+    out_feat = 64
+    self.gcn = GCNBlock(512, [1024, 1024, 512, 256, 128], out_feat, rel_names)
+    self.pred = MLPPredictor(out_feat)
 
   def gnn(self, g, x):
-    return self.gat(g[:self.n_layers[0]], x)
+    x = self.gcn(g, x)
+
+    return x
 
   def forward(self, pos_graph, neg_graph, blocks, x):
     x = self.gnn(blocks, x)
@@ -23,4 +25,4 @@ class MyModel(nn.Module):
 
   @property
   def n_layers(self):
-    return (4,)
+    return (6,)
