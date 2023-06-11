@@ -105,7 +105,7 @@ class GATBlock(nn.Module):
           }))
 
     self.bns = nn.ModuleDict({
-        rel: nn.ModuleList([nn.BatchNorm1d(feat) for feat in hidden_dims
+        rel: nn.ModuleList([nn.BatchNorm1d(feat * 4) for feat in hidden_dims
                            ]) for rel in ["author", "paper"]
     })
 
