@@ -125,7 +125,7 @@ class ScorePredictor(nn.Module):
     def cos_sim(a, b):
       return torch.sum(a * b, dim=1) / (torch.norm(a, dim=1) * torch.norm(b, dim=1))
     
-    return cos_sim(emb_1, emb_2)
+    return F.sigmoid(cos_sim(emb_1, emb_2))
 
   def forward(self, edge_subgraph, h):
     with edge_subgraph.local_scope():
