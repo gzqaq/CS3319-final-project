@@ -120,9 +120,6 @@ def main(_):
       torch.optim.lr_scheduler.CosineAnnealingLR(opt, 300),
   ])
 
-  if FLAGS.ckpt != "" and os.path.exists(FLAGS.ckpt):
-    model.load_state_dict(torch.load(FLAGS.ckpt))
-
   model.train()
   logging.info("Start training...")
   try:
