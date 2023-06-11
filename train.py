@@ -103,7 +103,7 @@ def main(_):
       train_eid_dict,
       sampler,
       device=device,
-      batch_size=32768,
+      batch_size=32768 * 2,
       shuffle=True,
       drop_last=False,
       num_workers=0,
@@ -143,6 +143,7 @@ def main(_):
       if avg_loss < 0.15 and eval_between > 1:
         eval_and_save_checkpoint(device, model, node_features, g, test_refs,
                                  out_dir)
+        # torch.cuda.empty_cache()
         model.train()
         eval_between = 0
 
