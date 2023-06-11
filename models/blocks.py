@@ -70,9 +70,17 @@ class SAGEBlock(nn.Module):
               for rel in rel_names
           }))
 
+    self.bns = nn.ModuleDict({
+        rel: nn.ModuleList([nn.BatchNorm1d(feat) for feat in hidden_dims
+                           ]) for rel in ["author", "paper"]
+    })
+
   def forward(self, blocks, x):
     for i, conv in enumerate(self.convs):
       x = conv(blocks[i], x)
+
+      if i < len(self.convs) - 1:
+        x = {k: self.bns[k][i](v) for k, v in x.items()}
 
     return x
 
@@ -97,7 +105,7 @@ class GATBlock(nn.Module):
           }))
 
     self.bns = nn.ModuleDict({
-        rel: nn.ModuleList([nn.BatchNorm1d(feat) for feat in hidden_dims
+        rel: nn.ModuleList([nn.BatchNorm1d(feat * 4) for feat in hidden_dims
                            ]) for rel in ["author", "paper"]
     })
 
@@ -113,6 +121,12 @@ class GATBlock(nn.Module):
 
 
 class ScorePredictor(nn.Module):
+  def predict(self, emb_1, emb_2):
+    def cos_sim(a, b):
+      return torch.sum(a * b, dim=1) / (torch.norm(a, dim=1) * torch.norm(b, dim=1))
+    
+    return F.sigmoid(cos_sim(emb_1, emb_2))
+
   def forward(self, edge_subgraph, h):
     with edge_subgraph.local_scope():
       edge_subgraph.ndata["h"] = h
