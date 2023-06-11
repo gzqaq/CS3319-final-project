@@ -123,7 +123,6 @@ def main(_):
   model.train()
   logging.info("Start training...")
   try:
-    eval_between = 0
     for i_epoch in range(300):
       avg_loss = 0
       beg = time.time()
@@ -146,11 +145,9 @@ def main(_):
                    f"| time: {time.time() - beg:<7.3f} "
                    f"| loss: {avg_loss:.3f} |")
 
-      if avg_loss < 0.15 and eval_between > 2:
-        eval_and_save_checkpoint(device, model, node_features, g, test_refs,
-                                 out_dir)
-        model.train()
-        eval_between = 0
+      eval_and_save_checkpoint(device, model, node_features, g, test_refs,
+                                out_dir)
+      model.train()
 
       scheduler.step()
       eval_between += 1
