@@ -1,4 +1,4 @@
-from models import max_margin_loss, binary_cross_entropy_loss
+from models import max_margin_loss, binary_cross_entropy_loss, baseline
 from read_dataset import build_graph
 
 import dgl
@@ -23,7 +23,15 @@ BEST_SCORE = 10
 
 
 def build_model(rel_list, device):
-  model = __import__(f"models.baselines.{FLAGS.model}", fromlist=[""])
+  model = {"GCN": baseline.DoubleGCN,
+           "SAGE": baseline.DoubleSAGE,
+           "GAT": baseline.DoubleGAT,
+           "GCNnoBN": baseline.DoubleGCNnoBN,
+           "SAGEnoBN": baseline.DoubleSAGEnoBN,
+           "GATnoBN": baseline.DoubleGATnoBN,
+           "GCNcos": baseline.DoubleGCNcos,
+           "SAGEcos": baseline.DoubleSAGEcos,
+           "GATcos": baseline.DoubleGATcos}[FLAGS.model]
 
   return model(rel_list).to(device)
 
