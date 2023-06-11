@@ -33,8 +33,8 @@ class SAGEnoBN(SAGEBlock):
 
 
 class GATnoBN(GATBlock):
-  def __init__(self, in_feat, hidden_dims, out_feat, rel_names):
-    super().__init__(in_feat, hidden_dims, out_feat, rel_names)
+  def __init__(self, in_feat, hidden_dims, out_feat, n_heads, rel_names):
+    super().__init__(in_feat, hidden_dims, out_feat, n_heads, rel_names)
 
     del self.bns
   
