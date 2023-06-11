@@ -148,9 +148,7 @@ def main(_):
       eval_and_save_checkpoint(device, model, node_features, g, test_refs,
                                 out_dir)
       model.train()
-
       scheduler.step()
-      eval_between += 1
 
   except KeyboardInterrupt:
     pass
