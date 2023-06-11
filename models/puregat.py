@@ -8,7 +8,7 @@ class MyModel(nn.Module):
     super().__init__()
 
     out_feat = 32
-    self.gat = GATBlock(512, [256, 128, 64], out_feat, [4] * 4, rel_names)
+    self.gat = GATBlock(512, [512, 256, 128, 64], out_feat, [4] * 5, rel_names)
     self.pred = MLPPredictor(out_feat * 4)
 
   def gnn(self, g, x):
@@ -23,4 +23,4 @@ class MyModel(nn.Module):
 
   @property
   def n_layers(self):
-    return (4,)
+    return (5,)

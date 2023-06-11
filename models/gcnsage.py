@@ -7,9 +7,9 @@ class MyModel(nn.Module):
   def __init__(self, rel_names):
     super().__init__()
 
-    out_feat = 32
-    self.gcn = GCNBlock(512, [1024, 256], 128, rel_names)
-    self.sage = SAGEBlock(128, [64, 32], out_feat, rel_names)
+    out_feat = 64
+    self.gcn = SAGEBlock(512, [1024, 256], 128, rel_names)
+    self.sage = GCNBlock(128, [256, 128], out_feat, rel_names)
     self.pred = MLPPredictor(out_feat)
 
   def gnn(self, g, x):

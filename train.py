@@ -140,10 +140,9 @@ def main(_):
                    f"| time: {time.time() - beg:<7.3f} "
                    f"| loss: {avg_loss:.3f} |")
 
-      if avg_loss < 0.15 and eval_between > 2:
+      if avg_loss < 0.15 and eval_between > 1:
         eval_and_save_checkpoint(device, model, node_features, g, test_refs,
                                  out_dir)
-        torch.cuda.empty_cache()
         model.train()
         eval_between = 0
 

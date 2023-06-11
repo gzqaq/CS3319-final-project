@@ -8,7 +8,7 @@ class MyModel(nn.Module):
     super().__init__()
 
     out_feat = 64
-    self.gcn = GCNBlock(512, [1024, 1024, 512, 256, 128], out_feat, rel_names)
+    self.gcn = GCNBlock(512, [512, 256, 128], out_feat, rel_names)
     self.pred = MLPPredictor(out_feat)
 
   def gnn(self, g, x):
@@ -25,4 +25,4 @@ class MyModel(nn.Module):
 
   @property
   def n_layers(self):
-    return (6,)
+    return (4,)
