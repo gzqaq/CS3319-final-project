@@ -25,6 +25,6 @@ python eval.py --score <f1_score_when_saved> --save_name <dir_name>
 
 ### Experiments for further analysis
 
-``terminal
+```terminal
 python experiment.py --lr <lr> --nbh <nbh_size> --loss <loss_type> --model <model_name> --gpu <gpu> --run_name <dir_name>
 ```
