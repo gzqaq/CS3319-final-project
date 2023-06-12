@@ -41,8 +41,6 @@ def eval_and_save_checkpoint(device,
   node_features = {k: v.to(device) for k, v in node_features.items()}
   with torch.no_grad():
     node_embeddings = model.gnn([g] * sum(model.n_layers), node_features)
-  del node_features
-  torch.cuda.empty_cache()
 
   def prob_fn(feat_u, feat_v):
     with torch.no_grad():
@@ -143,7 +141,6 @@ def main(_):
       if avg_loss < 0.15 and eval_between > 1:
         eval_and_save_checkpoint(device, model, node_features, g, test_refs,
                                  out_dir)
-        # torch.cuda.empty_cache()
         model.train()
         eval_between = 0
 
