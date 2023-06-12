@@ -16,22 +16,25 @@ flags.DEFINE_float("lr", 0.001, "Learning rate")
 flags.DEFINE_integer("nbh", 4, "Neighborhood size of sampler")
 flags.DEFINE_string("gpu", "0", "Which GPU to use")
 flags.DEFINE_string("loss", "margin", "Loss function")
-flags.DEFINE_string("model", "gcnsage", "Model type (must defined in models.baseline)")
+flags.DEFINE_string("model", "gcnsage",
+                    "Model type (must defined in models.baseline)")
 flags.DEFINE_string("run_name", "debug", "Run name")
 
 BEST_SCORE = 10
 
 
 def build_model(rel_list, device):
-  model = {"GCN": baseline.DoubleGCN,
-           "SAGE": baseline.DoubleSAGE,
-           "GAT": baseline.DoubleGAT,
-           "GCNnoBN": baseline.DoubleGCNnoBN,
-           "SAGEnoBN": baseline.DoubleSAGEnoBN,
-           "GATnoBN": baseline.DoubleGATnoBN,
-           "GCNcos": baseline.DoubleGCNcos,
-           "SAGEcos": baseline.DoubleSAGEcos,
-           "GATcos": baseline.DoubleGATcos}[FLAGS.model]
+  model = {
+      "GCN": baseline.DoubleGCN,
+      "SAGE": baseline.DoubleSAGE,
+      "GAT": baseline.DoubleGAT,
+      "GCNnoBN": baseline.DoubleGCNnoBN,
+      "SAGEnoBN": baseline.DoubleSAGEnoBN,
+      "GATnoBN": baseline.DoubleGATnoBN,
+      "GCNcos": baseline.DoubleGCNcos,
+      "SAGEcos": baseline.DoubleSAGEcos,
+      "GATcos": baseline.DoubleGATcos,
+  }[FLAGS.model]
 
   return model(rel_list).to(device)
 
@@ -146,7 +149,7 @@ def main(_):
                    f"| loss: {avg_loss:.3f} |")
 
       eval_and_save_checkpoint(device, model, node_features, g, test_refs,
-                                out_dir)
+                               out_dir)
       model.train()
       scheduler.step()
 

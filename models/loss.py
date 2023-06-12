@@ -17,6 +17,8 @@ def max_margin_loss(pos_score,
 
 def binary_cross_entropy_loss(pos_score, neg_score, etype):
   score = torch.cat([pos_score[etype], neg_score[etype]])
-  label = torch.cat([torch.ones_like(pos_score[etype]), torch.zeros_like(neg_score[etype])])
+  label = torch.cat(
+      [torch.ones_like(pos_score[etype]),
+       torch.zeros_like(neg_score[etype])])
 
   return F.binary_cross_entropy_with_logits(score, label)

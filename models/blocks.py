@@ -123,8 +123,9 @@ class GATBlock(nn.Module):
 class ScorePredictor(nn.Module):
   def predict(self, emb_1, emb_2):
     def cos_sim(a, b):
-      return torch.sum(a * b, dim=1) / (torch.norm(a, dim=1) * torch.norm(b, dim=1))
-    
+      return torch.sum(a * b,
+                       dim=1) / (torch.norm(a, dim=1) * torch.norm(b, dim=1))
+
     return F.sigmoid(cos_sim(emb_1, emb_2))
 
   def forward(self, edge_subgraph, h):
